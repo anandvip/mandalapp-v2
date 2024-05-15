@@ -6,7 +6,6 @@
     <title>Mandal Creator</title>
     <script src="https://unpkg.com/htmx.org"></script>
     <style>
-        /* General body styles */
         body {
             margin: 0;
             padding: 0;
@@ -17,10 +16,10 @@
             font-family: Arial, sans-serif;
         }
 
-        /* Container styling */
         .container {
-            width: 300px;
-            height: 600px;
+            width: 100%;
+            max-width: 600px;
+            height: 100vh;
             background-color: #d3d3d3;
             border-radius: 20px;
             display: flex;
@@ -32,27 +31,25 @@
             position: relative;
         }
 
-        /* Header styling */
         .header p {
             font-size: 24px;
             text-align: center;
             margin: 0;
         }
 
-        /* Content and image styling */
         .content {
             display: flex;
             flex-direction: column;
             align-items: center;
+            flex-grow: 1;
         }
 
         .mandal-image {
-            width: 100px; /* Reduced the size for better layout */
+            width: 100px;
             height: auto;
             margin-bottom: 20px;
         }
 
-        /* Button styling */
         .create-button {
             background-color: white;
             border: 2px solid #000;
@@ -62,6 +59,7 @@
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            margin-bottom: 10px;
         }
 
         .create-button:disabled {
@@ -73,7 +71,6 @@
             background-color: #e0e0e0;
         }
 
-        /* Modal styling */
         .modal {
             display: none;
             position: fixed;
@@ -112,14 +109,13 @@
             cursor: pointer;
         }
 
-        /* Dashboard styling */
         .dashboard {
-            margin-top: 20px;
-            width: 300px;
+            width: 100%;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
         }
 
         #userInfo {
@@ -142,7 +138,6 @@
             cursor: text;
         }
 
-        /* Ripple effect */
         .create-button::after {
             content: '';
             position: absolute;
@@ -161,10 +156,11 @@
             height: 200px;
         }
 
-        /* Horizontal swipe styling */
         .slides {
             display: flex;
             transition: transform 0.3s ease-in-out;
+            width: 100%;
+            flex-grow: 1;
         }
 
         .slide {
@@ -186,6 +182,7 @@
             background-color: #bbb;
             border-radius: 50%;
             display: inline-block;
+            cursor: pointer;
         }
 
         .active {
@@ -200,9 +197,13 @@
         </div>
         <div class="content">
             <img src="./lotuspose.png" alt="Lotus Pose" class="mandal-image">
+            <div class="dots">
+                <span class="dot active" onclick="goToSlide(0)"></span>
+                <span class="dot" onclick="goToSlide(1)"></span>
+                <span class="dot" onclick="goToSlide(2)"></span>
+            </div>
             <button class="create-button" id="createMandalBtn" hx-on="click: openModal(event)">create mandal</button>
         </div>
-
         <div class="slides">
             <div class="slide">
                 <div id="dashboard" class="dashboard">
@@ -211,17 +212,12 @@
                     <button class="create-button" id="createSessionBtn" hx-on="click: openSessionModal(event)">create meditation session</button>
                 </div>
             </div>
-            <div class="slide"><span></span>slide-1</span>
-                <!-- Blank slide for future content --></div>
             <div class="slide">
-                </span>slide-2</span>
-                <!-- Blank slide for future content --></div>
-        </div>
-
-        <div class="dots">
-            <span class="dot active"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
+                <span>Slide-1</span>
+            </div>
+            <div class="slide">
+                <span>Slide-2</span>
+            </div>
         </div>
     </div>
 
@@ -255,7 +251,6 @@
         const totalSlides = 3;
 
         document.addEventListener("DOMContentLoaded", function () {
-            // Check if there is user info in local storage
             const userInfo = JSON.parse(localStorage.getItem("mandalInfo"));
             if (userInfo) {
                 displayUserInfo(userInfo);
@@ -263,7 +258,6 @@
                 toggleCreateMandalButton(userInfo);
             }
 
-            // Handle form submission
             document.getElementById("mandalForm").addEventListener("submit", function (event) {
                 event.preventDefault();
                 const mandalName = document.getElementById("mandalName").value;
@@ -279,175 +273,69 @@
                     duration: duration,
                     startDate: startDate.toISOString().split('T')[0],
                     endDate: endDate.toISOString().split('T')[0],
-                    // Adding additional fields for dashboard display
                     daysCompleted: 0,
                     sessionsCompleted: 0,
                     mandalsCompleted: 0
                 };
 
-                // Store in local storage
                 localStorage.setItem("mandalInfo", JSON.stringify(mandalInfo));
-
-                // Display user info
                 displayUserInfo(mandalInfo);
-
-                // Update header with mandal name
                 updateHeader(mandalName);
-
-                // Toggle create mandal button
                 toggleCreateMandalButton(mandalInfo);
-
-                // Close the modal
                 closeModal();
             });
-
-            // Event listener for horizontal swipe
-            document.querySelector('.container').addEventListener('touchstart', handleTouchStart, false);
-            document.querySelector('.container').addEventListener('touchmove', handleTouchMove, false);
         });
 
-        // Function to update header with mandal name
+        function openModal(event) {
+            document.getElementById("modal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+
         function updateHeader(mandalName) {
             document.getElementById("mandalNameHeader").textContent = mandalName;
         }
 
-        // Function to toggle create mandal button
-        function toggleCreateMandalButton(userInfo) {
-            const createMandalBtn = document.getElementById("createMandalBtn");
-            const remainingDays = userInfo.duration - userInfo.daysCompleted;
-            createMandalBtn.disabled = remainingDays > 0;
-        }
-
-        // Function to display user info in the dashboard
         function displayUserInfo(userInfo) {
-            const today = new Date().toISOString().split('T')[0];
-            const startDate = new Date(userInfo.startDate);
-            const daysCompleted = Math.floor((new Date(today) - startDate) / (1000 * 60 * 60 * 24));
-            const remainingDays = userInfo.duration - daysCompleted;
-
-            const userInfoDiv = document.getElementById("userInfo");
-            userInfoDiv.innerHTML = `
-                <p>Namaskaram, ${userInfo.username}, ${today}, ${daysCompleted} days</p>
+            const userInfoContainer = document.getElementById("userInfo");
+            userInfoContainer.innerHTML = `
                 <div class="info-item">
-                    <span class="info-label">Your Name:</span> <span class="info-value" contenteditable="true" onblur="updateUserInfo('username', this.textContent)">${userInfo.username}</span>
+                    <span class="info-label">Name:</span>
+                    <span class="info-value">${userInfo.username}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Start Date:</span> ${userInfo.startDate}
+                <span class="info-label> Mandal Name:</span>
+                 <span class="info-value">${userInfo.mandalName} days</span><br>
+                    <span class="info-label">Duration:</span>
+                    <span class="info-value">${userInfo.duration} days</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">End Date:</span> ${userInfo.endDate}
+                    <span class="info-label">Start Date:</span>
+                    <span class="info-value">${userInfo.startDate}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Days Completed:</span> ${daysCompleted}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Remaining Days:</span> ${remainingDays}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Sessions Completed:</span> ${userInfo.sessionsCompleted}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Mandals Completed:</span> ${userInfo.mandalsCompleted}
+                    <span class="info-label">End Date:</span>
+                    <span class="info-value">${userInfo.endDate}</span>
                 </div>
             `;
         }
 
-        // Function to update user info and save it to local storage
-        function updateUserInfo(key, value) {
-            const userInfo = JSON.parse(localStorage.getItem("mandalInfo"));
-            userInfo[key] = value;
-            localStorage.setItem("mandalInfo", JSON.stringify(userInfo));
+        function toggleCreateMandalButton(userInfo) {
+            document.getElementById("createMandalBtn").disabled = !!userInfo;
         }
 
-        // Function to handle touch start event
-        function handleTouchStart(event) {
-            const firstTouch = event.touches[0];
-            xDown = firstTouch.clientX;
-            yDown = firstTouch.clientY;
-        }
-
-        // Function to handle touch move event
-        function handleTouchMove(event) {
-            if (!xDown || !yDown) {
-                return;
-            }
-
-            const xUp = event.touches[0].clientX;
-            const yUp = event.touches[0].clientY;
-
-            const xDiff = xDown - xUp;
-            const yDiff = yDown - yUp;
-
-            if (Math.abs(xDiff) > Math.abs(yDiff)) {
-                if (xDiff > 0) {
-                    // Swipe left
-                    nextSlide();
-                } else {
-                    // Swipe right
-                    prevSlide();
-                }
-            }
-
-            xDown = null;
-            yDown = null;
-        }
-
-        // Function to show the next slide
-        function nextSlide() {
-            if (currentSlide < totalSlides - 1) {
-                currentSlide++;
-                updateSlide();
-            }
-        }
-
-        // Function to show the previous slide
-        function prevSlide() {
-            if (currentSlide > 0) {
-                currentSlide--;
-                updateSlide();
-            }
-        }
-
-        // Function to update the slide display
-        function updateSlide() {
-            const slides = document.querySelector('.slides');
-            slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+        function goToSlide(slideIndex) {
+            const slidesContainer = document.querySelector('.slides');
+            slidesContainer.style.transform = `translateX(-${slideIndex * 100}%)`;
 
             const dots = document.querySelectorAll('.dot');
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentSlide);
-            });
+            dots.forEach(dot => dot.classList.remove('active'));
+            dots[slideIndex].classList.add('active');
+
+            currentSlide = slideIndex;
         }
-
-        // Open modal function with ripple effect
-        window.openModal = function (event) {
-            const modal = document.getElementById("modal");
-            modal.style.display = "flex";
-
-            // Apply ripple effect
-            const ripple = document.createElement('div');
-            ripple.classList.add('ripple');
-            modal.appendChild(ripple);
-
-            const maxDim = Math.max(modal.clientWidth, modal.clientHeight);
-            ripple.style.width = ripple.style.height = `${maxDim * 2}px`;
-            ripple.style.left = `${event.clientX - maxDim}px`;
-            ripple.style.top = `${event.clientY - maxDim}px`;
-
-            setTimeout(() => ripple.remove(), 600); // Remove the ripple effect after animation
-        }
-
-        // Close modal function
-        window.closeModal = function () {
-            document.getElementById("modal").style.display = "none";
-        }
-
-        // Event listener to close the modal when clicking outside of it
-        document.getElementById("modal").addEventListener("click", function (event) {
-            if (event.target === this) {
-                closeModal();
-            }
-        });
     </script>
 </body>
 </html>
