@@ -6,6 +6,7 @@
     <title>Mandal Creator</title>
     <script src="https://unpkg.com/htmx.org"></script>
     <style>
+        /* General body styles */
         body {
             margin: 0;
             padding: 0;
@@ -16,10 +17,10 @@
             font-family: Arial, sans-serif;
         }
 
+        /* Container styling */
         .container {
-            width: 100%;
-            max-width: 600px;
-            height: 100vh;
+            width: 300px;
+            height: 600px;
             background-color: #d3d3d3;
             border-radius: 20px;
             display: flex;
@@ -31,17 +32,18 @@
             position: relative;
         }
 
+        /* Header styling */
         .header p {
             font-size: 24px;
             text-align: center;
             margin: 0;
         }
 
+        /* Content and image styling */
         .content {
             display: flex;
             flex-direction: column;
             align-items: center;
-            flex-grow: 1;
         }
 
         .mandal-image {
@@ -50,6 +52,7 @@
             margin-bottom: 20px;
         }
 
+        /* Button styling */
         .create-button {
             background-color: white;
             border: 2px solid #000;
@@ -59,7 +62,6 @@
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            margin-bottom: 10px;
         }
 
         .create-button:disabled {
@@ -71,6 +73,26 @@
             background-color: #e0e0e0;
         }
 
+        .create-button.glow {
+            animation: glow 1.5s infinite;
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 5px #ffaa00;
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 20px #ffaa00;
+                transform: scale(1.05);
+            }
+            100% {
+                box-shadow: 0 0 5px #ffaa00;
+                transform: scale(1);
+            }
+        }
+
+        /* Modal styling */
         .modal {
             display: none;
             position: fixed;
@@ -109,13 +131,14 @@
             cursor: pointer;
         }
 
+        /* Dashboard styling */
         .dashboard {
-            width: 100%;
+            margin-top: 20px;
+            width: 300px;
             background-color: #fff;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 0px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
         }
 
         #userInfo {
@@ -138,6 +161,7 @@
             cursor: text;
         }
 
+        /* Ripple effect */
         .create-button::after {
             content: '';
             position: absolute;
@@ -156,11 +180,12 @@
             height: 200px;
         }
 
+        /* Horizontal swipe styling */
         .slides {
             display: flex;
             transition: transform 0.3s ease-in-out;
             width: 100%;
-            flex-grow: 1;
+            overflow: hidden;
         }
 
         .slide {
@@ -182,12 +207,70 @@
             background-color: #bbb;
             border-radius: 50%;
             display: inline-block;
-            cursor: pointer;
         }
 
         .active {
             background-color: #717171;
         }
+
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 17px;
+        }
+
+        .toast.show {
+            visibility: visible;
+        }
+
+        .toast .close {
+            position: absolute;
+            top: 0;
+            right: 0;
+            color: white;
+            padding: 12px;
+            cursor: pointer;
+        }
+
+        .dialog {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dialog-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            position: relative;
+        }
+      .del{
+        fill:red
+      }
+      .del:hover{
+        fill:#000
+      }
     </style>
 </head>
 <body>
@@ -197,35 +280,41 @@
         </div>
         <div class="content">
             <img src="./lotuspose.png" alt="Lotus Pose" class="mandal-image">
-            <div class="dots">
-                <span class="dot active" onclick="goToSlide(0)"></span>
-                <span class="dot" onclick="goToSlide(1)"></span>
-                <span class="dot" onclick="goToSlide(2)"></span>
-            </div>
             <button class="create-button" id="createMandalBtn" hx-on="click: openModal(event)">create mandal</button>
+        </div>
+        <div class="dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
         </div>
         <div class="slides">
             <div class="slide">
-                <div id="dashboard" class="dashboard">
-                    <h2>Mandal Dashboard</h2>
+                <div id="dashboard" class="dashboard" hx-target="this" hx-swap="outerHTML">
+                    <h2 contenteditable="true" onblur="updateUserInfo('mandalName', this.textContent)">Mandal Dashboard</h2>
                     <div id="userInfo"></div>
-                    <button class="create-button" id="createSessionBtn" hx-on="click: openSessionModal(event)">create meditation session</button>
+                    <button class="create-button glow" id="createSessionBtn" hx-on="click: openSessionModal(event)">create meditation session</button>
+                  <p></p>  
+                  <div>
+                      <button class="del" onclick="confirmDeleteMandal()"><svg viewBox="0 0 448 512" width="10" title="trash">
+                        <path d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z" />
+                      </svg></button>
+                    </div>
                 </div>
             </div>
             <div class="slide">
-                <span>Slide-1</span>
+                <p>content here</p>
             </div>
             <div class="slide">
-                <span>Slide-2</span>
+                <p>content here</p>
             </div>
         </div>
     </div>
 
     <div id="modal" class="modal">
         <div class="modal-content">
-            <span class="close" hx-on="click: closeModal()">&times;</span>
+            <span class="close" hx-on="click: closeModal()">ⓧ</span>
             <h2>Create Mandal</h2>
-            <form id="mandalForm">
+            <form id="mandalForm" hx-post="/create-mandal" hx-on="htmx:afterRequest:mandalCreated">
                 <label for="mandalName">Mandal Name:</label>
                 <input type="text" id="mandalName" name="mandalName" required>
 
@@ -241,21 +330,38 @@
                 <label for="startDate">Start Date:</label>
                 <input type="date" id="startDate" name="startDate" required>
 
-                <button type="submit">Submit</button>
+                <button type="submit">Save</button>
             </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">
+        <span class="close" onclick="closeToast()">&times;</span>
+        <p id="toastMessage"></p>
+    </div>
+
+    <div id="deleteDialog" class="dialog">
+        <div class="dialog-content">
+            <h2>Delete Mandal</h2>
+            <p>Are you sure you want to delete the ongoing mandal? All progress made so far will be lost and the mandal and session history will be deleted.</p>
+            <button onclick="deleteMandal()">Delete</button>
+            <button onclick="closeDialog()">Cancel</button>
         </div>
     </div>
 
     <script>
         let currentSlide = 0;
         const totalSlides = 3;
+        let mandalInfo = JSON.parse(localStorage.getItem("mandalInfo"));
 
         document.addEventListener("DOMContentLoaded", function () {
-            const userInfo = JSON.parse(localStorage.getItem("mandalInfo"));
-            if (userInfo) {
-                displayUserInfo(userInfo);
-                updateHeader(userInfo.mandalName);
-                toggleCreateMandalButton(userInfo);
+            if (mandalInfo) {
+                displayUserInfo(mandalInfo);
+                updateHeader(mandalInfo.mandalName);
+                toggleCreateMandalButton(mandalInfo);
+                animateButton('createSessionBtn');
+            } else {
+                document.getElementById("createMandalBtn").classList.add('glow');
             }
 
             document.getElementById("mandalForm").addEventListener("submit", function (event) {
@@ -267,7 +373,7 @@
                 const endDate = new Date(startDate);
                 endDate.setDate(startDate.getDate() + parseInt(duration));
 
-                const mandalInfo = {
+                mandalInfo = {
                     mandalName: mandalName,
                     username: username,
                     duration: duration,
@@ -283,11 +389,52 @@
                 updateHeader(mandalName);
                 toggleCreateMandalButton(mandalInfo);
                 closeModal();
+                showToast('Mandal created successfully!');
+            });
+
+            document.querySelector('.container').addEventListener('touchstart', handleTouchStart, false);
+            document.querySelector('.container').addEventListener('touchmove', handleTouchMove, false);
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeModal();
+                }
+            });
+
+            document.getElementById("modal").addEventListener("click", function (event) {
+                if (event.target === this) {
+                    closeModal();
+                }
+            });
+
+            htmx.on("htmx:afterRequest:mandalCreated", function(evt) {
+                closeModal();
+                showToast('Mandal created successfully!');
+            });
+
+            htmx.on("htmx:afterRequest:mandalDeleted", function(evt) {
+                closeDialog();
+                document.getElementById("dashboard").innerHTML = `
+                    <div id="dashboard" class="dashboard">
+                        <h2 contenteditable="true" onblur="updateUserInfo('mandalName', this.textContent)">Mandal Dashboard</h2>
+                        <div id="userInfo"></div>
+                        <button class="create-button glow" id="createSessionBtn" hx-on="click: openSessionModal(event)">create meditation session</button>
+                        <button class="del" onclick="confirmDeleteMandal()"><svg viewBox="0 0 448 512" width="10" title="trash">
+                          <path d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z" />
+                        </svg></button>
+                    </div>
+                `;
+                toggleCreateMandalButton(null);
+                showToast('Mandal deleted successfully!');
             });
         });
 
         function openModal(event) {
-            document.getElementById("modal").style.display = "flex";
+            if (mandalInfo) {
+                showToast(`There is an ongoing mandal found: ${mandalInfo.mandalName}. Once this ${mandalInfo.mandalName} is complete, the button will be enabled again. Would you like to delete it?`);
+                document.getElementById("toast").appendChild(createDeleteOptions());
+            } else {
+                document.getElementById("modal").style.display = "flex";
+            }
         }
 
         function closeModal() {
@@ -300,14 +447,21 @@
 
         function displayUserInfo(userInfo) {
             const userInfoContainer = document.getElementById("userInfo");
+            const today = new Date().toISOString().split('T')[0];
+            const startDate = new Date(userInfo.startDate);
+            const daysCompleted = Math.floor((new Date(today) - startDate) / (1000 * 60 * 60 * 24));
+            const remainingDays = userInfo.duration - daysCompleted;
+            
             userInfoContainer.innerHTML = `
                 <div class="info-item">
                     <span class="info-label">Name:</span>
-                    <span class="info-value">${userInfo.username}</span>
+                    <span class="info-value" contenteditable="true" onblur="updateUserInfo('username', this.textContent)">${userInfo.username}</span>
                 </div>
                 <div class="info-item">
-                <span class="info-label> Mandal Name:</span>
-                 <span class="info-value">${userInfo.mandalName} days</span><br>
+                    <span class="info-label">Mandal Name:</span>
+                    <span class="info-value" contenteditable="true" onblur="updateUserInfo('mandalName', this.textContent)">${userInfo.mandalName}ⓘ</span>
+                </div>
+                <div class="info-item">
                     <span class="info-label">Duration:</span>
                     <span class="info-value">${userInfo.duration} days</span>
                 </div>
@@ -319,22 +473,172 @@
                     <span class="info-label">End Date:</span>
                     <span class="info-value">${userInfo.endDate}</span>
                 </div>
+                <div class="info-item">
+                    <span class="info-label">Days Completed:</span>
+                    <span class="info-value">${daysCompleted}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Remaining Days:</span>
+                    <span class="info-value">${remainingDays}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Sessions Completed:</span>
+                    <span class="info-value">${userInfo.sessionsCompleted}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Mandals Completed:</span>
+                    <span class="info-value">${userInfo.mandalsCompleted}</span>
+                </div>
             `;
         }
 
-        function toggleCreateMandalButton(userInfo) {
-            document.getElementById("createMandalBtn").disabled = !!userInfo;
+        function updateUserInfo(key, value) {
+            mandalInfo[key] = value;
+            localStorage.setItem("mandalInfo", JSON.stringify(mandalInfo));
+            showToast('Updated successfully!');
         }
 
-        function goToSlide(slideIndex) {
-            const slidesContainer = document.querySelector('.slides');
-            slidesContainer.style.transform = `translateX(-${slideIndex * 100}%)`;
+        function toggleCreateMandalButton(userInfo) {
+            const createMandalBtn = document.getElementById("createMandalBtn");
+            createMandalBtn.disabled = !!userInfo;
+            if (!userInfo) {
+                createMandalBtn.classList.add('glow');
+            } else {
+                createMandalBtn.classList.remove('glow');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toastMessage").textContent = message;
+            toast.classList.add("show");
+        }
+
+        function closeToast() {
+            const toast = document.getElementById("toast");
+            toast.classList.remove("show");
+        }
+
+        function createDeleteOptions() {
+            const deleteOptions = document.createElement('div');
+            deleteOptions.innerHTML = `
+                <button onclick="confirmDeleteMandal()">Yes</button>
+                <button onclick="closeToast()">No</button>
+            `;
+            return deleteOptions;
+        }
+
+        function confirmDeleteMandal() {
+            closeToast();
+            document.getElementById("deleteDialog").style.display = "flex";
+        }
+
+        function closeDialog() {
+            document.getElementById("deleteDialog").style.display = "none";
+        }
+
+        function deleteMandal() {
+            localStorage.removeItem("mandalInfo");
+            mandalInfo = null;
+            closeDialog();
+            document.getElementById("dashboard").outerHTML = `
+                <div id="dashboard" class="dashboard">
+                    <h2 contenteditable="true" onblur="updateUserInfo('mandalName', this.textContent)">Mandal Dashboard</h2>
+                    <div id="userInfo"></div>
+                    <button class="create-button glow" id="createSessionBtn" hx-on="click: openSessionModal(event)">create meditation session</button>
+                    <button class="del" onclick="confirmDeleteMandal()"><svg viewBox="0 0 448 512" width="10" title="trash">
+                      <path d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z" />
+                    </svg></button>
+                </div>
+            `;
+            toggleCreateMandalButton(null);
+            showToast('Mandal deleted successfully!');
+        }
+
+        function handleTouchStart(event) {
+            const firstTouch = event.touches[0];
+            xDown = firstTouch.clientX;
+            yDown = firstTouch.clientY;
+        }
+
+        function handleTouchMove(event) {
+            if (!xDown || !yDown) {
+                return;
+            }
+
+            const xUp = event.touches[0].clientX;
+            const yUp = event.touches[0].clientY;
+
+            const xDiff = xDown - xUp;
+            const yDiff = yDown - yUp;
+
+            if (Math.abs(xDiff) > Math.abs(yDiff)) {
+                if (xDiff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+
+            xDown = null;
+            yDown = null;
+        }
+
+        function handleMouseDown(event) {
+            xDown = event.clientX;
+            yDown = event.clientY;
+        }
+
+        function handleMouseMove(event) {
+            if (!xDown || !yDown) {
+                return;
+            }
+
+            const xUp = event.clientX;
+            const yUp = event.clientY;
+
+            const xDiff = xDown - xUp;
+            const yDiff = yDown - yUp;
+
+            if (Math.abs(xDiff) > Math.abs(yDiff)) {
+                if (xDiff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+
+            xDown = null;
+            yDown = null;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function updateSlide() {
+            const slides = document.querySelector('.slides');
+            slides.style.transform = `translateX(-${currentSlide * 100}%)`;
 
             const dots = document.querySelectorAll('.dot');
-            dots.forEach(dot => dot.classList.remove('active'));
-            dots[slideIndex].classList.add('active');
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+        }
 
-            currentSlide = slideIndex;
+        function animateButton(buttonId) {
+            const button = document.getElementById(buttonId);
+            button.classList.add('glow');
         }
     </script>
 </body>
